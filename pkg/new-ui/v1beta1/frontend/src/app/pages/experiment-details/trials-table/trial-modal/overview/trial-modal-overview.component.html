@@ -1,0 +1,20 @@
+<lib-details-list-item key="Trial Name">
+  {{ trialName }}
+</lib-details-list-item>
+
+<lib-details-list-item key="Experiment Name">
+  {{ experimentName }}
+</lib-details-list-item>
+
+<lib-details-list-item key="Status" [icon]="statusIcon">
+  {{ status }}
+</lib-details-list-item>
+
+<lib-details-list-item [chipsList]="performance" key="Performance">
+</lib-details-list-item>
+
+<lib-conditions-table
+  *ngIf="trial"
+  [conditions]="trial.status.conditions"
+  title="Trial Conditions"
+></lib-conditions-table>
