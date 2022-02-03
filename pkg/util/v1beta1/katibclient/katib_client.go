@@ -29,6 +29,12 @@ import (
 	suggestionsv1beta1 "github.com/kubeflow/katib/pkg/apis/controller/suggestions/v1beta1"
 	trialsv1beta1 "github.com/kubeflow/katib/pkg/apis/controller/trials/v1beta1"
 	"github.com/kubeflow/katib/pkg/controller.v1beta1/consts"
+
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"bytes"
+	"io"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"fmt"
 )
 
 type Client interface {
@@ -45,6 +51,7 @@ type Client interface {
 	CreateRuntimeObject(object client.Object) error
 	DeleteRuntimeObject(object client.Object) error
 	UpdateRuntimeObject(object client.Object) error
+	GetTrialPodsLogs(name string, namespace string) (string, error)
 }
 
 type KatibClient struct {
@@ -216,4 +223,57 @@ func (k *KatibClient) UpdateRuntimeObject(object client.Object) error {
 		return err
 	}
 	return nil
+}
+
+// GetTrialPodsLogs returns logs of the Pod for the given name and namespace
+func (k *KatibClient) GetTrialPodsLogs(name string, namespace string) (string, error) {
+
+	fmt.Println("in GetTrialPodsLogs")
+
+	cfg, err := config.GetConfig()
+	if err != nil {
+		return "", err
+	}
+
+	clientset, err := corev1.NewForConfig(cfg)
+
+	podLogOpts := apiv1.PodLogOptions{}
+	podLogOpts.Container = "metrics-logger-and-collector"
+
+	// Get all pods in namespace with a label job-name
+	options := metav1.ListOptions{LabelSelector: "job-name=" + name}
+	podList, _ := clientset.Pods(namespace).List(context.Background(), options)
+	fmt.Println(podList)
+
+	var resultBuffer bytes.Buffer
+
+	for _, podInfo := range (*podList).Items {
+		podName := podInfo.Name
+
+		req := clientset.Pods(namespace).GetLogs(podName, &podLogOpts)
+		podLogs, err := req.Stream(context.Background())
+		fmt.Println("podLogs:")
+		fmt.Println(podLogs)
+		if err != nil {
+			return "error in opening stream", err
+		}
+		defer podLogs.Close()
+
+		buf := new(bytes.Buffer)
+		_, err = io.Copy(buf, podLogs)
+		if err != nil {
+			return "error in copy information from podLogs to buf", err
+		}
+		str := buf.String()
+
+		fmt.Println("str:")
+		fmt.Println(str)
+
+		resultBuffer.WriteString(str)
+	}
+
+	fmt.Println("resultBuffer:")
+	fmt.Println(resultBuffer.String())
+
+	return resultBuffer.String(), nil
 }

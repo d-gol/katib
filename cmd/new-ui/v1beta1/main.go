@@ -68,6 +68,8 @@ func main() {
 	http.HandleFunc("/katib/delete_template/", kuh.DeleteTemplate)
 	http.HandleFunc("/katib/fetch_namespaces", kuh.FetchNamespaces)
 
+	http.HandleFunc("/katib/fetch_pods_logs/", kuh.FetchPodsLogs)
+
 	log.Printf("Serving at %s:%s", *host, *port)
 	if err := http.ListenAndServe(fmt.Sprintf("%s:%s", *host, *port), nil); err != nil {
 		panic(err)

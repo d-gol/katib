@@ -31,6 +31,7 @@ export class TrialModalComponent implements OnInit {
   dataLoaded: boolean;
   trialDetails: TrialK8s;
   experimentName: string;
+  logs: string;
 
   // chart's options
   view = [700, 500];
@@ -121,6 +122,12 @@ export class TrialModalComponent implements OnInit {
 
   private updateTrialInfo() {
     this.backendService
+      .getTrialPodsLogs(this.trialName, this.namespace)
+      .subscribe(response => {
+        this.logs = response;
+      });
+
+    this.backendService
       .getTrial(this.trialName, this.namespace)
       .subscribe(response => this.processTrialInfo(response));
 
@@ -139,6 +146,7 @@ export class TrialModalComponent implements OnInit {
           // then start polling the trial
           this.startTrialInfoPolling();
           this.startTrialPolling();
+          this.startLogsPolling();
         }
       });
   }
@@ -207,6 +215,27 @@ export class TrialModalComponent implements OnInit {
         this.backendService
           .getTrial(this.trialName, this.namespace)
           .subscribe(response => this.processTrialInfo(response));
+      }),
+    );
+  }
+
+  private startLogsPolling() {
+    this.poller = new ExponentialBackoff({
+      interval: 5000,
+      retries: 1,
+      maxInterval: 5001,
+    });
+
+    // Poll for new data and reset the poller if different data is found
+    this.subs.add(
+      this.poller.start().subscribe(() => {
+        this.backendService
+          .getTrialPodsLogs(this.trialName, this.namespace)
+          .subscribe(response => {
+            this.logs = response;
+            //this.logs = "ABC<br />ABCD\ntest";
+            console.log(this.logs);
+          });
       }),
     );
   }

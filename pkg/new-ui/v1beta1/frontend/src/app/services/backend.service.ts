@@ -102,4 +102,9 @@ export class KWABackendService extends BackendService {
       .post(url, { postData: exp })
       .pipe(catchError(error => this.parseError(error)));
   }
+
+  getTrialPodsLogs(trialName: string, namespace: string): Observable<any> {
+    const url = `/katib/fetch_pods_logs/?trialName=${trialName}&namespace=${namespace}`;
+    return this.http.get(url).pipe(catchError(error => this.parseError(error)));
+  }
 }

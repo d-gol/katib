@@ -416,3 +416,26 @@ func (k *KatibUIHandler) FetchTrial(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(response)
 }
+
+// FetchPodsLogs is sth
+func (k *KatibUIHandler) FetchPodsLogs(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Requesting logs")
+
+	trialName := r.URL.Query()["trialName"][0]
+	namespace := r.URL.Query()["namespace"][0]
+	log.Printf("Requesting logs")
+
+	logs, err := k.katibClient.GetTrialPodsLogs(trialName, namespace)
+	if err != nil {
+		log.Printf("GetLogs failed: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	response, err := json.Marshal(logs)
+	if err != nil {
+		log.Printf("Marshal DeleteObservationLogRequest failed: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(response)
+}

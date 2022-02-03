@@ -9,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
 
 import { TrialModalOverviewModule } from './overview/trial-modal-overview.module';
+import { TrialModalLogsModule } from './logs/trial-modal-logs.module';
 import { TrialModalComponent } from './trial-modal.component';
 
 import {
@@ -22,6 +23,7 @@ import {
   declarations: [TrialModalComponent],
   imports: [
     TrialModalOverviewModule,
+    TrialModalLogsModule,
     CommonModule,
     MatTableModule,
     MatProgressSpinnerModule,
