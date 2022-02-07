@@ -1,10 +1,10 @@
 import { NgModule } from '@angular/core';
 import { TrialModalLogsComponent } from './trial-modal-logs.component';
-import { AceEditorModule } from 'ng2-ace-editor';
+import { CommonModule } from '@angular/common'
 
 @NgModule({
   declarations: [TrialModalLogsComponent],
-  imports: [AceEditorModule],
+  imports: [CommonModule],
   exports: [TrialModalLogsComponent],
 })
 export class TrialModalLogsModule {}

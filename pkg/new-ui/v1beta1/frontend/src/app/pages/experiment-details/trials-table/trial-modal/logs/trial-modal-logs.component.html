@@ -1,14 +1,17 @@
-<div style="background-color:#272a2e;
-            color:#ffffff;
-            border-radius: 5px;
-            padding-top: 5px;
-            padding-left: 10px;
-            margin: 10px 100px 0 30px;
-            overflow-y: scroll;
-            height: 200px;
-            width: 1000px;
-            white-space: pre;
-            display: flex;
-            flex-direction: column-reverse;">
-  {{logs}}
+
+<div class="container">
+  <div class="worker-list">
+    <table>
+      <tr *ngFor="let pod of pods">
+        <td>
+          <button (click)="selectPod(pod)">
+            {{pod}}
+          </button>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="logs-terminal">
+    {{activeLogs}}
+  </div>
 </div>

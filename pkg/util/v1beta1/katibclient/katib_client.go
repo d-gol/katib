@@ -51,7 +51,7 @@ type Client interface {
 	CreateRuntimeObject(object client.Object) error
 	DeleteRuntimeObject(object client.Object) error
 	UpdateRuntimeObject(object client.Object) error
-	GetTrialPodsLogs(name string, namespace string) (string, error)
+	GetTrialPodsLogs(name string, namespace string) (map[string]string, error)
 }
 
 type KatibClient struct {
@@ -226,26 +226,27 @@ func (k *KatibClient) UpdateRuntimeObject(object client.Object) error {
 }
 
 // GetTrialPodsLogs returns logs of the Pod for the given name and namespace
-func (k *KatibClient) GetTrialPodsLogs(name string, namespace string) (string, error) {
+func (k *KatibClient) GetTrialPodsLogs(name string, namespace string) (map[string]string, error) {
 
 	fmt.Println("in GetTrialPodsLogs")
 
 	cfg, err := config.GetConfig()
 	if err != nil {
-		return "", err
+		return map[string]string{}, err
 	}
 
 	clientset, err := corev1.NewForConfig(cfg)
 
 	podLogOpts := apiv1.PodLogOptions{}
-	podLogOpts.Container = "metrics-logger-and-collector"
+	//podLogOpts.Container = "metrics-logger-and-collector"
+	podLogOpts.Container = "tensorflow"
 
 	// Get all pods in namespace with a label job-name
 	options := metav1.ListOptions{LabelSelector: "job-name=" + name}
 	podList, _ := clientset.Pods(namespace).List(context.Background(), options)
 	fmt.Println(podList)
 
-	var resultBuffer bytes.Buffer
+	var resultMap = make(map[string]string)
 
 	for _, podInfo := range (*podList).Items {
 		podName := podInfo.Name
@@ -255,25 +256,28 @@ func (k *KatibClient) GetTrialPodsLogs(name string, namespace string) (string, e
 		fmt.Println("podLogs:")
 		fmt.Println(podLogs)
 		if err != nil {
-			return "error in opening stream", err
+			return map[string]string{}, err
 		}
 		defer podLogs.Close()
 
 		buf := new(bytes.Buffer)
 		_, err = io.Copy(buf, podLogs)
 		if err != nil {
-			return "error in copy information from podLogs to buf", err
+			return map[string]string{}, err
 		}
 		str := buf.String()
 
 		fmt.Println("str:")
 		fmt.Println(str)
 
-		resultBuffer.WriteString(str)
+		resultMap[podName] = str
+		fmt.Println("resultMap[podName]");
+		fmt.Println(resultMap[podName]);
+
 	}
 
-	fmt.Println("resultBuffer:")
-	fmt.Println(resultBuffer.String())
+	fmt.Println("resultMap");
+	fmt.Println(resultMap);
 
-	return resultBuffer.String(), nil
+	return resultMap, nil
 }

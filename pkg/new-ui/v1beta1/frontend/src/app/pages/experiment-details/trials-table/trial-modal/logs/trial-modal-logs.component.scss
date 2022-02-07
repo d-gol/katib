@@ -1,9 +1,29 @@
-:host {
-    display: block;
-    overflow: auto;
-  }
-  
-[ace-editor] {
-  width: 100%;
+.container {
+  width: 90%;
+  height: 200px;
+  background: grey;
+  margin: auto;
+  margin-top: 10px;
 }
 
+.worker-list {
+  width: 20%;
+  height: 200px;
+  background: #4f555e;
+  float: left;
+}
+
+.logs-terminal {
+  background-color:#272a2e;
+  color:#ffffff;
+  border-radius: 5px;
+  padding-top: 5px;
+  padding-left: 10px;
+  margin: 0px 100px 0 30px;
+  overflow-y: scroll;
+  height: 200px;
+  width: 79%;
+  white-space: pre;
+  display: flex;
+  flex-direction: column-reverse;
+}

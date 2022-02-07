@@ -31,7 +31,7 @@ export class TrialModalComponent implements OnInit {
   dataLoaded: boolean;
   trialDetails: TrialK8s;
   experimentName: string;
-  logs: string;
+  logs: Map<string, string>;
 
   // chart's options
   view = [700, 500];
@@ -124,7 +124,7 @@ export class TrialModalComponent implements OnInit {
     this.backendService
       .getTrialPodsLogs(this.trialName, this.namespace)
       .subscribe(response => {
-        this.logs = response;
+        this.logs = new Map(Object.entries(response));
       });
 
     this.backendService
@@ -232,9 +232,7 @@ export class TrialModalComponent implements OnInit {
         this.backendService
           .getTrialPodsLogs(this.trialName, this.namespace)
           .subscribe(response => {
-            this.logs = response;
-            //this.logs = "ABC<br />ABCD\ntest";
-            console.log(this.logs);
+            this.logs = new Map(Object.entries(response));
           });
       }),
     );
