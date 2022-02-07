@@ -1,5 +1,5 @@
 
-<div class="container">
+<div *ngIf="logs" class="container">
   <div class="worker-list">
     <table>
       <tr *ngFor="let pod of pods">

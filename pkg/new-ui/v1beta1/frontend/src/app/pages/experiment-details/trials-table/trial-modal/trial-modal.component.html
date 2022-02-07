@@ -43,6 +43,7 @@
           </mat-tab>
           <mat-tab label="LOGS">
             <app-trial-modal-logs
+              *ngIf="logs" 
               [logs]="logs"
             ></app-trial-modal-logs>
           </mat-tab>

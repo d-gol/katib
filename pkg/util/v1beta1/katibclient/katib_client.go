@@ -30,11 +30,12 @@ import (
 	trialsv1beta1 "github.com/kubeflow/katib/pkg/apis/controller/trials/v1beta1"
 	"github.com/kubeflow/katib/pkg/controller.v1beta1/consts"
 
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"bytes"
-	"io"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"fmt"
+	"io"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
 type Client interface {
@@ -225,10 +226,18 @@ func (k *KatibClient) UpdateRuntimeObject(object client.Object) error {
 	return nil
 }
 
-// GetTrialPodsLogs returns logs of the Pod for the given name and namespace
-func (k *KatibClient) GetTrialPodsLogs(name string, namespace string) (map[string]string, error) {
+// GetTrialPodsLogs returns logs of the Pod for the given job name and namespace
+func (k *KatibClient) GetTrialPodsLogs(trialName string, namespace string) (map[string]string, error) {
 
 	fmt.Println("in GetTrialPodsLogs")
+
+	trial := &trialsv1beta1.Trial{}
+
+	if err := k.client.Get(context.TODO(), types.NamespacedName{Name: trialName, Namespace: namespace}, trial); err != nil {
+		return map[string]string{}, err
+	}
+
+	fmt.Println("Trial obtained")
 
 	cfg, err := config.GetConfig()
 	if err != nil {
@@ -238,11 +247,15 @@ func (k *KatibClient) GetTrialPodsLogs(name string, namespace string) (map[strin
 	clientset, err := corev1.NewForConfig(cfg)
 
 	podLogOpts := apiv1.PodLogOptions{}
-	//podLogOpts.Container = "metrics-logger-and-collector"
-	podLogOpts.Container = "tensorflow"
 
 	// Get all pods in namespace with a label job-name
-	options := metav1.ListOptions{LabelSelector: "job-name=" + name}
+	jobNameLabel := "job-name="
+	if trial.Spec.RunSpec.GetKind() == "MPIJob" {
+		jobNameLabel = "mpi-job-name="
+	}
+
+	options := metav1.ListOptions{LabelSelector: jobNameLabel + trialName}
+
 	podList, _ := clientset.Pods(namespace).List(context.Background(), options)
 	fmt.Println(podList)
 
@@ -250,6 +263,14 @@ func (k *KatibClient) GetTrialPodsLogs(name string, namespace string) (map[strin
 
 	for _, podInfo := range (*podList).Items {
 		podName := podInfo.Name
+		podLogOpts.Container = trial.Spec.PrimaryContainerName
+
+		for container := range podInfo.Spec.Containers {
+			if podInfo.Spec.Containers[container].Name == "metrics-logger-and-collector" {
+				podLogOpts.Container = "metrics-logger-and-collector"
+				break
+			}
+		}
 
 		req := clientset.Pods(namespace).GetLogs(podName, &podLogOpts)
 		podLogs, err := req.Stream(context.Background())
@@ -271,13 +292,13 @@ func (k *KatibClient) GetTrialPodsLogs(name string, namespace string) (map[strin
 		fmt.Println(str)
 
 		resultMap[podName] = str
-		fmt.Println("resultMap[podName]");
-		fmt.Println(resultMap[podName]);
+		fmt.Println("resultMap[podName]")
+		fmt.Println(resultMap[podName])
 
 	}
 
-	fmt.Println("resultMap");
-	fmt.Println(resultMap);
+	fmt.Println("resultMap")
+	fmt.Println(resultMap)
 
 	return resultMap, nil
 }
