@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Kubeflow Authors.
+Copyright 2022 The Kubeflow Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -113,12 +113,13 @@ type TrialCondition struct {
 type TrialConditionType string
 
 const (
-	TrialCreated      TrialConditionType = "Created"
-	TrialRunning      TrialConditionType = "Running"
-	TrialSucceeded    TrialConditionType = "Succeeded"
-	TrialKilled       TrialConditionType = "Killed"
-	TrialFailed       TrialConditionType = "Failed"
-	TrialEarlyStopped TrialConditionType = "EarlyStopped"
+	TrialCreated            TrialConditionType = "Created"
+	TrialRunning            TrialConditionType = "Running"
+	TrialSucceeded          TrialConditionType = "Succeeded"
+	TrialKilled             TrialConditionType = "Killed"
+	TrialFailed             TrialConditionType = "Failed"
+	TrialMetricsUnavailable TrialConditionType = "MetricsUnavailable"
+	TrialEarlyStopped       TrialConditionType = "EarlyStopped"
 )
 
 // +genclient

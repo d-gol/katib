@@ -1,5 +1,5 @@
 /*
-Copyright 2021 The Kubeflow Authors.
+Copyright 2022 The Kubeflow Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,10 +22,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/go-openapi/spec"
 	"github.com/kubeflow/katib/pkg/apis/v1beta1"
 	"k8s.io/klog"
 	"k8s.io/kube-openapi/pkg/common"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 )
 
 // Generate OpenAPI spec definitions for Katib Resource

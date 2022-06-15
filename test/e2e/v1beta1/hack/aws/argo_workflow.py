@@ -1,4 +1,4 @@
-# Copyright 2021 The Kubeflow Authors.
+# Copyright 2022 The Kubeflow Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -68,21 +68,23 @@ KATIB_IMAGES = {
 # Dict with Katib Experiments to run during the test.
 # Key - image name, Value - dockerfile location.
 KATIB_EXPERIMENTS = {
-    "random":                   "examples/v1beta1/hp-tuning/random.yaml",
-    "grid":                     "examples/v1beta1/hp-tuning/grid.yaml",
-    "bayesianoptimization":     "examples/v1beta1/hp-tuning/bayesian-optimization.yaml",
-    "tpe":                      "examples/v1beta1/hp-tuning/tpe.yaml",
-    "multivariate-tpe":         "examples/v1beta1/hp-tuning/multivariate-tpe.yaml",
-    "cmaes":                    "examples/v1beta1/hp-tuning/cma-es.yaml",
-    "hyperband":                "examples/v1beta1/hp-tuning/hyperband.yaml",
-    "enas":                     "examples/v1beta1/nas/enas-cpu.yaml",
-    "darts":                    "examples/v1beta1/nas/darts-cpu.yaml",
-    "pytorchjob":               "examples/v1beta1/kubeflow-training-operator/pytorchjob-mnist.yaml",
-    "tfjob":                    "examples/v1beta1/kubeflow-training-operator/tfjob-mnist-with-summaries.yaml",
-    "file-metricscollector":    "examples/v1beta1/metrics-collector/file-metrics-collector.yaml",
-    "never-resume":             "examples/v1beta1/resume-experiment/never-resume.yaml",
-    "from-volume-resume":       "examples/v1beta1/resume-experiment/from-volume-resume.yaml",
-    "median-stop":              "examples/v1beta1/early-stopping/median-stop.yaml"
+    "random":                                 "examples/v1beta1/hp-tuning/random.yaml",
+    "grid":                                   "examples/v1beta1/hp-tuning/grid.yaml",
+    "bayesianoptimization":                   "examples/v1beta1/hp-tuning/bayesian-optimization.yaml",
+    "tpe":                                    "examples/v1beta1/hp-tuning/tpe.yaml",
+    "multivariate-tpe":                       "examples/v1beta1/hp-tuning/multivariate-tpe.yaml",
+    "cmaes":                                  "examples/v1beta1/hp-tuning/cma-es.yaml",
+    "hyperband":                              "examples/v1beta1/hp-tuning/hyperband.yaml",
+    "enas":                                   "examples/v1beta1/nas/enas-cpu.yaml",
+    "darts":                                  "examples/v1beta1/nas/darts-cpu.yaml",
+    "pytorchjob":                             "examples/v1beta1/kubeflow-training-operator/pytorchjob-mnist.yaml",
+    "tfjob":                                  "examples/v1beta1/kubeflow-training-operator/tfjob-mnist-with-summaries.yaml",
+    "file-metricscollector":                  "examples/v1beta1/metrics-collector/file-metrics-collector.yaml",
+    "file-metricscollector-with-json-format": "examples/v1beta1/metrics-collector/file-metrics-collector-with-json-format.yaml",
+    "never-resume":                           "examples/v1beta1/resume-experiment/never-resume.yaml",
+    "from-volume-resume":                     "examples/v1beta1/resume-experiment/from-volume-resume.yaml",
+    "median-stop":                            "examples/v1beta1/early-stopping/median-stop.yaml",
+    "median-stop-with-json-format":           "examples/v1beta1/early-stopping/median-stop-with-json-format.yaml",
 }
 # How many Experiments are running in parallel.
 PARALLEL_EXECUTION = 5
@@ -145,6 +147,10 @@ class WorkflowBuilder(object):
                 "value": self.workflow_name
             },
             {
+                "name": "EKS_CLUSTER_VERSION",
+                "value": "1.19"
+            },
+            {
                 "name": "ECR_REGISTRY",
                 "value": self.ecr_registry
             },
@@ -163,7 +169,7 @@ class WorkflowBuilder(object):
             },
             {
                 "name": "EXTRA_REPOS",
-                "value": "kubeflow/testing@HEAD;kubeflow/manifests@v1.4-branch"
+                "value": "kubeflow/testing@HEAD;kubeflow/manifests@v1.5-branch"
             },
             # Set GOPATH to test_dir because Katib repo is located under /src/github.com/kubeflow/katib
             {
