@@ -52,6 +52,7 @@ type Client interface {
 	CreateRuntimeObject(object client.Object) error
 	DeleteRuntimeObject(object client.Object) error
 	UpdateRuntimeObject(object client.Object) error
+	GetTrialLogs(name string, namespace string) (string, error)
 }
 
 type KatibClient struct {
