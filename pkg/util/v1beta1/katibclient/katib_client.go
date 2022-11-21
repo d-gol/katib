@@ -238,7 +238,6 @@ func (k *KatibClient) GetTrialLogs(trialName string, namespace string) (string, 
 	}
 
 	clientset, err := corev1.NewForConfig(cfg)
-	podLogOpts := apiv1.PodLogOptions{}
 
 	jobNameLabel := "job-name="
 	if trial.Spec.RunSpec.GetKind() == "MPIJob" {
@@ -255,14 +254,8 @@ func (k *KatibClient) GetTrialLogs(trialName string, namespace string) (string, 
 
 	podInfo := podList.Items[0]
 	podName := podInfo.Name
-	podLogOpts.Container = trial.Spec.PrimaryContainerName
-
-	for container := range podInfo.Spec.Containers {
-		if podInfo.Spec.Containers[container].Name == "metrics-logger-and-collector" {
-			podLogOpts.Container = "metrics-logger-and-collector"
-			break
-		}
-	}
+	podLogOpts := apiv1.PodLogOptions{}
+	podLogOpts.Container = "metrics-logger-and-collector"
 
 	req := clientset.Pods(namespace).GetLogs(podName, &podLogOpts)
 	podLogs, err := req.Stream(context.Background())
