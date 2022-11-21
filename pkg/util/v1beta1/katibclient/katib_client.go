@@ -226,42 +226,40 @@ func (k *KatibClient) UpdateRuntimeObject(object client.Object) error {
 
 // GetTrialLogs returns logs of a master Pod for the given job name and namespace
 func (k *KatibClient) GetTrialLogs(trialName string, namespace string) (string, error) {
-	trial := &trialsv1beta1.Trial{}
-
-	if err := k.client.Get(context.TODO(), types.NamespacedName{Name: trialName, Namespace: namespace}, trial); err != nil {
-		return "Trial not found.", err
-	}
-
 	cfg, err := config.GetConfig()
 	if err != nil {
 		return "", err
 	}
 
 	clientset, err := corev1.NewForConfig(cfg)
+	if err != nil {
+		return "", err
+	}
+
+	trial := &trialsv1beta1.Trial{}
+
+	if err := k.client.Get(context.TODO(), types.NamespacedName{Name: trialName, Namespace: namespace}, trial); err != nil {
+		return "Trial not found.", err
+	}
 
 	jobNameLabel := "job-name="
 	if trial.Spec.RunSpec.GetKind() == "MPIJob" {
 		jobNameLabel = "mpi-job-name="
 	}
 
-	selectionLabels := jobNameLabel + trialName + ",replica-type=master"
-	options := metav1.ListOptions{LabelSelector: selectionLabels}
+	options := metav1.ListOptions{LabelSelector: jobNameLabel + trialName + ",replica-type=master"}
 	podList, err := clientset.Pods(namespace).List(context.Background(), options)
 
 	if err != nil || len(podList.Items) != 1 {
 		return "Logs could not be obtained for the trail.", err
 	}
 
-	podInfo := podList.Items[0]
-	podName := podInfo.Name
-	podLogOpts := apiv1.PodLogOptions{}
-	podLogOpts.Container = "metrics-logger-and-collector"
-
-	req := clientset.Pods(namespace).GetLogs(podName, &podLogOpts)
+	podLogOpts := apiv1.PodLogOptions{Container: "metrics-logger-and-collector"}
+	req := clientset.Pods(namespace).GetLogs(podList.Items[0].Name, &podLogOpts)
 	podLogs, err := req.Stream(context.Background())
 
 	if err != nil {
-		return "", err
+		return "Error during transmition of logs.", err
 	}
 	defer podLogs.Close()
 
