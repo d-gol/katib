@@ -421,3 +421,26 @@ func (k *KatibUIHandler) FetchTrial(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// FetchTrialLogs fetches logs for a trial in specific namespace.
+func (k *KatibUIHandler) FetchTrialLogs(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Requesting logs")
+
+	trialName := r.URL.Query()["trialName"][0]
+	namespace := r.URL.Query()["namespace"][0]
+	log.Printf("Requesting logs")
+
+	logs, err := k.katibClient.GetTrialLogs(trialName, namespace)
+	if err != nil {
+		log.Printf("GetLogs failed: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	response, err := json.Marshal(logs)
+	if err != nil {
+		log.Printf("Marshal DeleteObservationLogRequest failed: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(response)
+}

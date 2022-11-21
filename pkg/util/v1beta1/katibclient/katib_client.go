@@ -17,7 +17,9 @@ limitations under the License.
 package katibclient
 
 import (
+	"bytes"
 	"context"
+	"io"
 
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -29,6 +31,9 @@ import (
 	suggestionsv1beta1 "github.com/kubeflow/katib/pkg/apis/controller/suggestions/v1beta1"
 	trialsv1beta1 "github.com/kubeflow/katib/pkg/apis/controller/trials/v1beta1"
 	"github.com/kubeflow/katib/pkg/controller.v1beta1/consts"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
 type Client interface {
@@ -45,6 +50,7 @@ type Client interface {
 	CreateRuntimeObject(object client.Object) error
 	DeleteRuntimeObject(object client.Object) error
 	UpdateRuntimeObject(object client.Object) error
+	GetTrialLogs(name string, namespace string) (string, error)
 }
 
 type KatibClient struct {
@@ -216,4 +222,53 @@ func (k *KatibClient) UpdateRuntimeObject(object client.Object) error {
 		return err
 	}
 	return nil
+}
+
+// GetTrialLogs returns logs of a master Pod for the given job name and namespace
+func (k *KatibClient) GetTrialLogs(trialName string, namespace string) (string, error) {
+	cfg, err := config.GetConfig()
+	if err != nil {
+		return "", err
+	}
+
+	clientset, err := corev1.NewForConfig(cfg)
+	if err != nil {
+		return "", err
+	}
+
+	trial := &trialsv1beta1.Trial{}
+
+	if err := k.client.Get(context.TODO(), types.NamespacedName{Name: trialName, Namespace: namespace}, trial); err != nil {
+		return "Trial not found.", err
+	}
+
+	jobNameLabel := "job-name="
+	if trial.Spec.RunSpec.GetKind() == "MPIJob" {
+		jobNameLabel = "mpi-job-name="
+	}
+
+	options := metav1.ListOptions{LabelSelector: jobNameLabel + trialName + ",replica-type=master"}
+	podList, err := clientset.Pods(namespace).List(context.Background(), options)
+
+	if err != nil || len(podList.Items) != 1 {
+		return "Logs could not be obtained for the trail.", err
+	}
+
+	podLogOpts := apiv1.PodLogOptions{Container: "metrics-logger-and-collector"}
+	req := clientset.Pods(namespace).GetLogs(podList.Items[0].Name, &podLogOpts)
+	podLogs, err := req.Stream(context.Background())
+
+	if err != nil {
+		return "Error during transmition of logs.", err
+	}
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		return "", err
+	}
+	str := buf.String()
+
+	return str, nil
 }
