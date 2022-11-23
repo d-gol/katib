@@ -448,7 +448,7 @@ func (k *KatibUIHandler) FetchTrialLogs(w http.ResponseWriter, r *http.Request) 
 	}
 	response, err := json.Marshal(logs)
 	if err != nil {
-		log.Printf("Marshal DeleteObservationLogRequest failed: %v", err)
+		log.Printf("Marshal logs failed: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -468,9 +468,8 @@ func getTrialLogs(k *KatibUIHandler, trialName string, namespace string) (string
 	}
 
 	trial := &trialsv1beta1.Trial{}
-
 	if err := k.katibClient.GetClient().Get(context.TODO(), types.NamespacedName{Name: trialName, Namespace: namespace}, trial); err != nil {
-		return "Trial not found.", err
+		return "", err
 	}
 
 	jobNameLabel := "job-name="
@@ -478,19 +477,15 @@ func getTrialLogs(k *KatibUIHandler, trialName string, namespace string) (string
 		jobNameLabel = "mpi-job-name="
 	}
 
-	options := metav1.ListOptions{LabelSelector: jobNameLabel + trialName + ",replica-type=master"}
-	podList, err := clientset.Pods(namespace).List(context.Background(), options)
-
+	podList, err := clientset.Pods(namespace).List(context.Background(), metav1.ListOptions{LabelSelector: jobNameLabel + trialName + ",replica-type=master"})
 	if err != nil || len(podList.Items) != 1 {
-		return "Logs could not be obtained for the trail.", err
+		return "", err
 	}
 
-	podLogOpts := apiv1.PodLogOptions{Container: "metrics-logger-and-collector"}
-	req := clientset.Pods(namespace).GetLogs(podList.Items[0].Name, &podLogOpts)
+	req := clientset.Pods(namespace).GetLogs(podList.Items[0].Name, &apiv1.PodLogOptions{Container: "metrics-logger-and-collector"})
 	podLogs, err := req.Stream(context.Background())
-
 	if err != nil {
-		return "Error during transmition of logs.", err
+		return "", err
 	}
 	defer podLogs.Close()
 
