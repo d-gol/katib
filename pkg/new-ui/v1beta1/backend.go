@@ -473,6 +473,10 @@ func getTrialLogs(k *KatibUIHandler, trialName string, namespace string) (string
 	}
 
 	selectionLabel := "training.kubeflow.org/job-name=" + trialName + ",training.kubeflow.org/job-role=master"
+	if trial.Spec.RunSpec.GetKind() == "Job" {
+		selectionLabel = "job-name=" + trialName
+	}
+
 	podList, err := clientset.Pods(namespace).List(context.Background(), metav1.ListOptions{LabelSelector: selectionLabel})
 	if err != nil || len(podList.Items) != 1 {
 		return "", err
