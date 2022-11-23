@@ -472,17 +472,23 @@ func getTrialLogs(k *KatibUIHandler, trialName string, namespace string) (string
 		return "", err
 	}
 
-	jobNameLabel := "job-name="
-	if trial.Spec.RunSpec.GetKind() == "MPIJob" {
-		jobNameLabel = "mpi-job-name="
-	}
-
-	podList, err := clientset.Pods(namespace).List(context.Background(), metav1.ListOptions{LabelSelector: jobNameLabel + trialName + ",replica-type=master"})
+	selectionLabel := "training.kubeflow.org/job-name=" + trialName + ",training.kubeflow.org/job-role=master"
+	podList, err := clientset.Pods(namespace).List(context.Background(), metav1.ListOptions{LabelSelector: selectionLabel})
 	if err != nil || len(podList.Items) != 1 {
 		return "", err
 	}
 
-	req := clientset.Pods(namespace).GetLogs(podList.Items[0].Name, &apiv1.PodLogOptions{Container: "metrics-logger-and-collector"})
+	podLogOpts := apiv1.PodLogOptions{}
+	podLogOpts.Container = trial.Spec.PrimaryContainerName
+
+	for container := range podList.Items[0].Spec.Containers {
+		if podList.Items[0].Spec.Containers[container].Name == "metrics-logger-and-collector" {
+			podLogOpts.Container = "metrics-logger-and-collector"
+			break
+		}
+	}
+
+	req := clientset.Pods(namespace).GetLogs(podList.Items[0].Name, &podLogOpts)
 	podLogs, err := req.Stream(context.Background())
 	if err != nil {
 		return "", err
