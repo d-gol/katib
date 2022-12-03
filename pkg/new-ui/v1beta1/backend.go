@@ -649,7 +649,7 @@ func getTrialLogs(k *KatibUIHandler, trialName string, namespace string) (string
 	}
 
 	if len(podList.Items) == 0 {
-		message := `Logs for the trial could not be found.
+		message := `ABCLogs for the trial could not be found.
 Was 'retain: true' specified in the Experiment definition?
 An example can be found here: https://github.com/kubeflow/katib/blob/7bf39225f7235ee4ba6cf285ecc2c455c6471234/examples/v1beta1/argo/argo-workflow.yaml#L33`
 
