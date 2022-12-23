@@ -23,6 +23,7 @@ rules:
       - ""
     resources:
       - pods
+<<<<<<< HEAD
     verbs:
       - list
   - apiGroups:
@@ -30,6 +31,11 @@ rules:
     resources:
       - pods/log
     verbs:
+=======
+      - pods/log
+    verbs:
+      - list
+>>>>>>> b8654ebfe (Backend for getting logs of a trial)
       - get
 ---
 apiVersion: v1
